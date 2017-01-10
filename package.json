@@ -1,15 +1,16 @@
 {
-  "name": "yar",
-  "description": "Cookie jar plugin for Hapi",
+  "name": "yarnemia",
+  "description": "Cookie jar plugin for Hapi without iron encryption",
   "version": "8.1.2",
-  "repository": "git://github.com/hapijs/yar",
+  "repository": "git://github.com/pmoons/yarnemia",
   "main": "lib/index.js",
   "keywords": [
     "hapi",
     "plugin",
     "cookies",
     "jar",
-    "session"
+    "session",
+    "unencrpyted"
   ],
   "engines": {
     "node": ">=4.0.0"
