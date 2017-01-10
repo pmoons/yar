@@ -17,7 +17,6 @@
   },
   "dependencies": {
     "hoek": "4.x.x",
-    "statehood": "5.x.x",
     "uuid": "3.x.x"
   },
   "devDependencies": {
@@ -28,7 +27,7 @@
     "npmignore": "0.2.x"
   },
   "scripts": {
-    "test": "lab -a code -t 100 -L",
+    "test": "lab -a code -t 100",
     "test-cov-html": "lab -a code -r html -o coverage.html",
     "update-npmignore": "npmignore"
   },
