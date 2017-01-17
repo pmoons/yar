@@ -1,8 +1,12 @@
+[![CircleCI](https://circleci.com/gh/pmoons/yarnemia.svg?style=svg)](https://circleci.com/gh/pmoons/yarnemia)
+[![codecov](https://codecov.io/gh/pmoons/yarnemia/branch/master/graph/badge.svg)](https://codecov.io/gh/pmoons/yarnemia)
+[![Code Climate](https://codeclimate.com/github/pmoons/yarnemia/badges/gpa.svg)](https://codeclimate.com/github/pmoons/yarnemia)
+
 A [**hapi**](https://github.com/hapijs/hapi) session plugin and cookie jar without unnecessary [Iron](https://github.com/hueniverse/iron) cookie encryption
 
 Lead Maintainer: [Peter Mooney](https://github.com/pmoons)
 
-Forked from [Yar](https://github.com/hapijs/yar), maintained by [Mark Bradshaw](https://github.com/mark-bradshaw)
+Forked from [Yar](https://github.com/hapijs/yar) a maintained module by [Mark Bradshaw](https://github.com/mark-bradshaw)
 
 ## Install
 
@@ -85,10 +89,6 @@ var options = {
 ### clearInvalid
 
 `clearInvalid` (default `true`) tells Hapi that if a session cookie is invalid for any reason, to clear it from the browser.  This prevents Hapi from having to reprocess the bad cookie on future requests.  In general you'll probably want this on, but if you'd prefer that session cookies be dealt with in some other way you may set this to `false`.
-
-## Hapi-Auth-Cookie
-
-There's a similar project called [Hapi-Auth-Cookie](https://github.com/hapijs/hapi-auth-cookie) that achieves similar ends to *yarnemia*.  If you want some additional options around authentication then you should take a look there.
 
 ## API Reference
 
