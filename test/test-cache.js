@@ -1,26 +1,24 @@
-'use strict';
-
 const internals = {};
 
-exports = module.exports = internals.Connection = function () {
+exports = module.exports = internals.Connection = function Connection() {
   this.started = false;
   return this;
 };
 
-internals.Connection.prototype.start = function (callback) {
+internals.Connection.prototype.start = function start(callback) {
   this.started = true;
   callback();
 };
 
-internals.Connection.prototype.stop = function () {
+internals.Connection.prototype.stop = function stop() {
   this.started = false;
 };
 
-internals.Connection.prototype.isReady = function () {
+internals.Connection.prototype.isReady = function isReady() {
   return this.started;
 };
 
-internals.Connection.prototype.validateSegmentName = function (name) {
+internals.Connection.prototype.validateSegmentName = function validateSegmentName(name) {
   if (!name) {
     return new Error('Empty string');
   }
@@ -32,31 +30,26 @@ internals.Connection.prototype.validateSegmentName = function (name) {
   return null;
 };
 
-
-internals.Connection.prototype.insert = function (record, callback) {
+internals.Connection.prototype.insert = function insert(record, callback) {
   return callback();
 };
 
-
-internals.Connection.prototype.replace = function (record, callback) {
+internals.Connection.prototype.replace = function replace(record, callback) {
   return callback();
 };
 
-
-internals.Connection.prototype.get = function (key, callback) {
+internals.Connection.prototype.get = function get(key, callback) {
   return callback(null, null);
 };
 
-
-internals.Connection.prototype.set = function (key, value, ttl, callback) {
+internals.Connection.prototype.set = function set(key, value, ttl, callback) {
   return callback();
 };
 
-
-internals.Connection.prototype.drop = function (key, callback) {
+internals.Connection.prototype.drop = function drop(key, callback) {
   return callback(null);
 };
 
-internals.Connection.prototype.generateKey = function (key) {
+internals.Connection.prototype.generateKey = function generateKey(key) {
   return encodeURIComponent(key.segment) + encodeURIComponent(key.id);
 };

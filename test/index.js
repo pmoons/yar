@@ -1,11 +1,11 @@
-'use strict';
-
 // Load modules
 
 const Boom = require('boom');
 const Code = require('code');
 const Hapi = require('hapi');
 const Lab = require('lab');
+const Yarnemia = require('../');
+const TestCache = require('./test-cache.js');
 
 // Test shortcuts
 
@@ -17,8 +17,8 @@ const expect = Code.expect;
 it('sets session value then gets it back', (done) => {
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
 
   const server = new Hapi.Server();
@@ -26,7 +26,9 @@ it('sets session value then gets it back', (done) => {
 
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => {
         let returnValue = request.yarnemia.set('some', { value: '2' });
         expect(returnValue.value).to.equal('2');
 
@@ -34,25 +36,30 @@ it('sets session value then gets it back', (done) => {
         expect(returnValue).to.equal('xyz');
 
         request.yarnemia.clear('one');
+
         return reply(Object.keys(request.yarnemia._store).length);
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => {
         const some = request.yarnemia.get('some');
         some.raw = 'access';
         request.yarnemia.touch();
         return reply(some.value);
-      }
+      },
     }, {
-      method: 'GET', path: '/3', handler: (request, reply) => {
+      method: 'GET',
+      path: '/3',
+      handler: (request, reply) => {
         const raw = request.yarnemia.get('some').raw;
         request.yarnemia.reset();
         return reply(raw);
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
@@ -63,12 +70,12 @@ it('sets session value then gets it back', (done) => {
         expect(header.length).to.equal(1);
         expect(header[0]).to.not.contain('Secure');
 
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
         server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
           expect(res2.result).to.equal('2');
 
           const header2 = res2.headers['set-cookie'];
-          const cookie2 = header2[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+          const cookie2 = header2[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
           server.inject({ method: 'GET', url: '/3', headers: { cookie: cookie2[1] } }, (res3) => {
             expect(res3.result).to.equal('access');
@@ -83,11 +90,11 @@ it('sets session value then gets it back', (done) => {
 it('sets session value and wait till cache expires then fails to get it back', (done) => {
   const options = {
     cookieOptions: {
-      isSecure: false
+      isSecure: false,
     },
     cache: {
-      expiresIn: 1
-    }
+      expiresIn: 1,
+    },
   };
 
   const server = new Hapi.Server();
@@ -95,21 +102,25 @@ it('sets session value and wait till cache expires then fails to get it back', (
 
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => {
         request.yarnemia.set('some', { value: '2' });
         request.yarnemia.set('one', 'xyz');
         request.yarnemia.clear('one');
         return reply(Object.keys(request.yarnemia._store).length);
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => {
         const some = request.yarnemia.get('some');
         return reply(some);
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
     server.start(() => {
       server.inject({ method: 'GET', url: '/1' }, (res) => {
@@ -119,7 +130,7 @@ it('sets session value and wait till cache expires then fails to get it back', (
         expect(header.length).to.equal(1);
         expect(header[0]).to.not.contain('Secure');
 
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
         setTimeout(() => {
           server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
@@ -139,24 +150,27 @@ it('prevents invalid keys being set on yarnemia object (lazy mode)', (done) => {
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
-        request.yarnemia.lazy(true);
-        request.yarnemia.some = { value: '2' };
-        request.yarnemia._test = { value: '3' };
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => {
+        const req = request;
+        req.yarnemia.lazy(true);
+        req.yarnemia.some = { value: '2' };
+        req.yarnemia._test = { value: '3' };
         return reply('1');
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
-        return reply(request.yarnemia.some.value);
-      }
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => reply(request.yarnemia.some.value),
     }, {
-      method: 'GET', path: '/3', handler: (request, reply) => {
-        return reply(request.yarnemia._test);
-      }
-    }
+      method: 'GET',
+      path: '/3',
+      handler: (request, reply) => reply(request.yarnemia._test),
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
@@ -167,13 +181,13 @@ it('prevents invalid keys being set on yarnemia object (lazy mode)', (done) => {
         expect(header.length).to.equal(1);
 
         expect(header[0]).to.contain('Secure');
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
         server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
           expect(res2.result).to.equal('2');
 
           const header2 = res2.headers['set-cookie'];
-          const cookie2 = header2[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+          const cookie2 = header2[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
           server.inject({ method: 'GET', url: '/3', headers: { cookie: cookie2[1] } }, (res3) => {
             expect(res3.result).to.be.null();
@@ -193,18 +207,20 @@ it('returns no keys from session (lazy mode)', (done) => {
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => {
         request.yarnemia.lazy(true);
         return reply('1');
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
-        return reply(request.yarnemia._store);
-      }
-    }
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => reply(request.yarnemia._store),
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
@@ -215,7 +231,7 @@ it('returns no keys from session (lazy mode)', (done) => {
         expect(header.length).to.equal(1);
         expect(header[0]).to.contain('Secure');
 
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
         server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
           expect(res2.result).to.be.empty();
@@ -229,37 +245,43 @@ it('returns no keys from session (lazy mode)', (done) => {
 it('sets session value then gets it back (clear)', (done) => {
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
   const server = new Hapi.Server();
 
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => {
         const returnValue = request.yarnemia.set({
-            some: '2',
-            and: 'thensome'
+          some: '2',
+          and: 'thensome',
         });
         expect(returnValue.some).to.equal('2');
         expect(returnValue.and).to.equal('thensome');
         return reply('1');
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => {
         const some = request.yarnemia.get('some', true);
         return reply(some);
-      }
+      },
     }, {
-      method: 'GET', path: '/3', handler: (request, reply) => {
+      method: 'GET',
+      path: '/3',
+      handler: (request, reply) => {
         const some = request.yarnemia.get('some');
         return reply(some || '3');
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
@@ -267,13 +289,13 @@ it('sets session value then gets it back (clear)', (done) => {
         expect(res.result).to.equal('1');
 
         const header = res.headers['set-cookie'];
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
         server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
           expect(res2.result).to.equal('2');
 
           const header2 = res2.headers['set-cookie'];
-          const cookie2 = header2[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+          const cookie2 = header2[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
           server.inject({ method: 'GET', url: '/3', headers: { cookie: cookie2[1] } }, (res3) => {
             expect(res3.result).to.equal('3');
@@ -292,24 +314,26 @@ it('returns 500 when storing cookie in invalid cache by default', (done) => {
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => {
         request.yarnemia.set('some', { value: '2' });
         return reply('1');
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
-        return reply(request.yarnemia.get('some'));
-      }
-    }
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => reply(request.yarnemia.get('some')),
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
       server.inject({ method: 'GET', url: '/1' }, (res) => {
         const header = res.headers['set-cookie'];
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
         server._caches._default.client.stop();
         server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
@@ -324,27 +348,31 @@ it('returns 500 when storing cookie in invalid cache by default', (done) => {
 it('fails setting session key/value because of bad key/value arguments', (done) => {
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
   const server = new Hapi.Server({ debug: false });
 
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
-        request.yarnemia.set({ 'some': '2' }, '2');
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => {
+        request.yarnemia.set({ some: '2' }, '2');
         return reply('1');
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => {
         request.yarnemia.set(45.68, '2');
         return reply('1');
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
@@ -363,16 +391,16 @@ it('fails setting session key/value because of bad key/value arguments', (done) 
 it('fails setting session key/value because of failed cache set', { parallel: false }, (done) => {
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
-  const cache = require('./test-cache.js');
+  const cache = TestCache;
   const setRestore = cache.prototype.set;
   const hapiOptions = {
     cache: {
-      engine: require('./test-cache.js')
+      engine: TestCache,
     },
-    debug: false
+    debug: false,
   };
   const server = new Hapi.Server(hapiOptions);
 
@@ -387,8 +415,13 @@ it('fails setting session key/value because of failed cache set', { parallel: fa
     return reply();
   };
 
-  server.route({ method: 'GET', path: '/', handler });
-  server.register({ register: require('../'), options }, (err) => {
+  server.route({
+    method: 'GET',
+    path: '/',
+    handler,
+  });
+
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
@@ -403,17 +436,17 @@ it('fails setting session key/value because of failed cache set', { parallel: fa
 });
 
 it('returns a 500 error when setting session key/value in a cache that is not ready', { parallel: false }, (done) => {
-  const cache = require('./test-cache');
+  const cache = TestCache;
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
   const hapiOptions = {
     cache: {
-      engine: cache
+      engine: cache,
     },
-    debug: false
+    debug: false,
   };
   const server = new Hapi.Server(hapiOptions);
 
@@ -422,28 +455,32 @@ it('returns a 500 error when setting session key/value in a cache that is not re
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/', handler: (request, reply) => {
+      method: 'GET',
+      path: '/',
+      handler: (request, reply) => {
         request.yarnemia.set('some', 'value');
         return reply();
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => {
         isReadyRestore = cache.prototype.isReady;
         cache.prototype.isReady = () => (false);
 
         const value = request.yarnemia.set('some1', 'value1');
         return reply(value);
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
       server.inject({ method: 'GET', url: '/' }, (res) => {
         const header = res.headers['set-cookie'];
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
         server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
           expect(res2.statusCode).to.equal(500);
@@ -457,17 +494,17 @@ it('returns a 500 error when setting session key/value in a cache that is not re
 });
 
 it('fails loading session from invalid cache and returns 500', { parallel: false }, (done) => {
-  const cache = require('./test-cache.js');
+  const cache = TestCache;
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
   const hapiOptions = {
     cache: {
-      engine: cache
+      engine: cache,
     },
-    debug: false
+    debug: false,
   };
   const server = new Hapi.Server(hapiOptions);
 
@@ -475,25 +512,29 @@ it('fails loading session from invalid cache and returns 500', { parallel: false
 
   server.route([
     {
-      method: 'GET', path: '/', handler: (request, reply) => {
+      method: 'GET',
+      path: '/',
+      handler: (request, reply) => {
         request.yarnemia.set('some', 'value');
         return reply('1');
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => {
         request.yarnemia.set(45.68, '2');
         return reply('1');
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
       server.inject({ method: 'GET', url: '/' }, (res) => {
         const header = res.headers['set-cookie'];
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
 
         expect(res.statusCode).to.equal(200);
         expect(res.result).to.equal('1');
@@ -516,42 +557,46 @@ it('fails loading session from invalid cache and returns 500', { parallel: false
 });
 
 it('returns a 500 error if cache is not ready', { parallel: false }, (done) => {
-  const cache = require('./test-cache');
+  const cache = TestCache;
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
   const hapiOptions = {
     cache: {
-      engine: cache
+      engine: cache,
     },
-    debug: false
+    debug: false,
   };
   const server = new Hapi.Server(hapiOptions);
 
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/', handler: (request, reply) => {
+      method: 'GET',
+      path: '/',
+      handler: (request, reply) => {
         request.yarnemia.set('some', 'value');
         return reply();
-      }
+      },
     }, {
-      method: 'GET', path: '/2', handler: (request, reply) => {
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => {
         const value = request.yarnemia.get('some');
         return reply(value || '2');
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
       server.inject({ method: 'GET', url: '/' }, (res) => {
         const header = res.headers['set-cookie'];
-        const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+        const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
         const isReadyRestore = cache.prototype.isReady;
 
         cache.prototype.isReady = () => (false);
@@ -570,22 +615,24 @@ it('sends back a 400 for a bad session id', (done) => {
   const options = {
     cookieOptions: {
       isSecure: false,
-    }
+    },
   };
   const headers = {
-    Cookie: 'session=Fe26.2**deadcafe' // bad session value
+    Cookie: 'session=Fe26.2**deadcafe', // bad session value
   };
   const server = new Hapi.Server({ debug: false });
 
   server.connection();
   server.route({
-    method: 'GET', path: '/1', handler: (request, reply) => {
+    method: 'GET',
+    path: '/1',
+    handler: (request, reply) => {
       request.yarnemia.set('some', { value: '2' });
       return reply('1');
-    }
+    },
   });
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
@@ -600,8 +647,8 @@ it('sends back a 400 for a bad session id', (done) => {
 it('ignores requests when session is not set (error)', (done) => {
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
   const server = new Hapi.Server();
 
@@ -611,14 +658,14 @@ it('ignores requests when session is not set (error)', (done) => {
     path: '/',
     handler: (request, reply) => {
       reply('ok');
-    }
+    },
   });
 
   server.ext('onRequest', (request, reply) => {
     reply(Boom.badRequest('handler error'));
   });
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
     server.start(() => {
       server.inject('/', (res) => {
@@ -637,19 +684,20 @@ it('ignores requests when the skip route config value is true', (done) => {
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/',
+      method: 'GET',
+      path: '/',
       handler: (request, reply) => (reply('1')),
       config: {
         plugins: {
           yarnemia: {
-              skip: true
-          }
-        }
-      }
-    }
+            skip: true,
+          },
+        },
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
@@ -679,8 +727,8 @@ describe('flash()', () => {
           request.yarnemia.flash('test', 'test 1', true);
           request.yarnemia.flash('test', 'test 2', true);
           reply(request.yarnemia._store);
-        }
-      }
+        },
+      },
     });
 
     server.route({
@@ -691,13 +739,13 @@ describe('flash()', () => {
           const flashes = request.yarnemia.flash();
           reply({
             yarnemia: request.yarnemia._store,
-            flashes
+            flashes,
           });
-        }
-      }
+        },
+      },
     });
 
-    server.register({ register: require('../'), options }, (err) => {
+    server.register({ register: Yarnemia, options }, (err) => {
       expect(err).to.not.exist();
 
       server.start(() => {
@@ -708,7 +756,7 @@ describe('flash()', () => {
           const header = res.headers['set-cookie'];
           expect(header.length).to.equal(1);
 
-          const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+          const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
           server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
             expect(res2.result.yarnemia._flash.error).to.not.exist();
             expect(res2.result.flashes).to.exist();
@@ -731,8 +779,8 @@ describe('flash()', () => {
         handler: (request, reply) => {
           request.yarnemia.flash('error', 'test error');
           reply(request.yarnemia._store);
-        }
-      }
+        },
+      },
     });
 
     server.route({
@@ -745,13 +793,13 @@ describe('flash()', () => {
           reply({
             yarnemia: request.yarnemia._store,
             errors,
-            nomsg
+            nomsg,
           });
-        }
-      }
+        },
+      },
     });
 
-    server.register({ register: require('../'), options }, (err) => {
+    server.register({ register: Yarnemia, options }, (err) => {
       expect(err).to.not.exist();
 
       server.start(() => {
@@ -762,7 +810,7 @@ describe('flash()', () => {
           const header = res.headers['set-cookie'];
           expect(header.length).to.equal(1);
 
-          const cookie = header[0].match(/(session=[^\x00-\x20\"\,\;\\\x7F]*)/);
+          const cookie = header[0].match(/(session=[^\x00-\x20",;\\\x7F]*)/);
           server.inject({ method: 'GET', url: '/2', headers: { cookie: cookie[1] } }, (res2) => {
             expect(res2.result.yarnemia._flash.error).to.not.exist();
             expect(res2.result.errors).to.exist();
@@ -778,30 +826,30 @@ describe('flash()', () => {
 it('stores blank sessions when storeBlank is not given', (done) => {
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
   const server = new Hapi.Server();
 
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
-        return reply('heyo!');
-      }
-    }
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => reply('heyo!'),
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
       let stores = 0;
       const fn = server._caches._default.client.set;
 
-      server._caches._default.client.set = function () { // Don't use arrow function here.
+      server._caches._default.client.set = function setCache(...args) { // Don't use arrow function
         stores++;
-        fn.apply(this, arguments);
+        fn.apply(this, args);
       };
 
       server.inject({ method: 'GET', url: '/1' }, (res) => {
@@ -817,35 +865,36 @@ it('does not store blank sessions when storeBlank is false', (done) => {
   const options = {
     storeBlank: false,
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
   const server = new Hapi.Server();
 
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
-        return reply('heyo!');
-      }
-    },
-    {
-      method: 'GET', path: '/2', handler: (request, reply) => {
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => reply('heyo!'),
+    }, {
+      method: 'GET',
+      path: '/2',
+      handler: (request, reply) => {
         request.yarnemia.set('hello', 'world');
         return reply('should be set now');
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {
       let stores = 0;
       const fn = server._caches._default.client.set;
-      server._caches._default.client.set = function () { // Don't use arrow function here.
+      server._caches._default.client.set = function setCache(...args) { // Don't use arrow function
         stores++;
-        fn.apply(this, arguments);
+        fn.apply(this, args);
       };
 
       server.inject({ method: 'GET', url: '/1' }, (res) => {
@@ -865,8 +914,8 @@ it('does not store blank sessions when storeBlank is false', (done) => {
 it('will set a session ID', (done) => {
   const options = {
     cookieOptions: {
-      isSecure: false
-    }
+      isSecure: false,
+    },
   };
 
   const server = new Hapi.Server();
@@ -874,14 +923,16 @@ it('will set a session ID', (done) => {
   server.connection();
   server.route([
     {
-      method: 'GET', path: '/1', handler: (request, reply) => {
+      method: 'GET',
+      path: '/1',
+      handler: (request, reply) => {
         expect(request.yarnemia.id).to.exist();
         return reply(1);
-      }
-    }
+      },
+    },
   ]);
 
-  server.register({ register: require('../'), options }, (err) => {
+  server.register({ register: Yarnemia, options }, (err) => {
     expect(err).to.not.exist();
 
     server.start(() => {

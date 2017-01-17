@@ -1,7 +1,7 @@
 {
   "name": "yarnemia",
   "description": "Cookie jar plugin for Hapi without iron encryption",
-  "version": "8.1.2",
+  "version": "1.0.0",
   "repository": "git://github.com/pmoons/yarnemia",
   "main": "lib/index.js",
   "keywords": [
@@ -22,13 +22,16 @@
   "devDependencies": {
     "boom": "4.x.x",
     "code": "4.x.x",
+    "eslint": "^3.13.1",
+    "eslint-config-airbnb-base": "^10.0.0",
+    "eslint-plugin-import": "^2.2.0",
     "hapi": "15.x.x",
     "lab": "11.x.x",
     "npmignore": "0.2.x"
   },
   "scripts": {
-    "test": "lab -a code -t 100",
-    "test-cov-html": "lab -a code -r html -o coverage.html",
+    "test": "lab -L -a code -t 100",
+    "test-cov": "lab -a code -r lcov -o .coverage/lcov.info",
     "update-npmignore": "npmignore"
   },
   "license": "BSD-3-Clause"
