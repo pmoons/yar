@@ -5,6 +5,8 @@ engines:
       languages:
         javascript:
           mass_threshold: 130
+    exclude_paths:
+    - "test/"
   eslint:
     enabled: true
     channel: "eslint-3"
