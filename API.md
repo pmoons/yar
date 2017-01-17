@@ -1,4 +1,4 @@
-# Yar
+# Yarnemia
 
 ## API Reference
 
@@ -6,7 +6,6 @@
 
 - `name` - determines the name of the cookie used to store session information. Defaults to _session_.
 - `storeBlank` - determines whether to store empty session before they've been modified. Defaults to _true_.
-- `errorOnCacheNotReady` - will cause yarnemia to throw an exception if trying to persist to cache when the cache is unavailable. Setting this to false will allow applications using yarnemia to run uninterrupted if the cache is not ready (however sessions will not be saving). Defaults to _true_.
 - `cache` - **hapi** [cache options](https://github.com/hapijs/hapi/blob/master/API.md#servercacheoptions) which includes
   (among other options):
     - `expiresIn` - server-side storage expiration (defaults to 1 day).
@@ -14,19 +13,16 @@
     - `path` - determines the cookie path. Defaults to _'/'_.
     - `isSameSite` - enables the `same-site` cookie parameter.  Default to 'Lax'.  Can be `'Strict'|'Lax'|false`.
     - `isSecure` - determines whether or not to transfer using TLS/SSL. Defaults to _true_.
-    - `isHttpOnly` - determines whether or not to set HttpOnly option in cookie. Defaults to _false_.
+    - `isHttpOnly` - determines whether or not to set HttpOnly option in cookie. Defaults to _true_.
     - `ttl` - sets the time for the cookie to live in the browser, in milliseconds.  Defaults to null (session time-life - cookies are deleted when the browser is closed).
-- `customSessionIDGenerator` - an optional function to create custom session IDs. Must return a string and have the signature `function (request)` where:
-    - `request` - (optional) is the original **request** received from the client.
 
 #### Route Options
 You can also add these options on a route per route basis at `config.plugins.yarnemia`:
-    - `skip` - a boolean value which, if true, means no session with be attached to the request (defaults to false).
-
+  - `skip` - a boolean value which, if true, means no session with be attached to the request (defaults to false).
 
 #### Methods
 
-**yarnemia** adds the `yarnemia` property to every request object and initializes the `yarnemia.id` on the first request from each browser. The `request.yarnemia` interface provides the following methods:
+**Yarnemia** adds the `yarnemia` property to every request object and initializes the `yarnemia.id` on the first request from each browser. The `request.yarnemia` interface provides the following methods:
 
 - `reset()` - clears the session and assigns a new session id.
 - `set(key, value)` - assigns a value (string, object, etc) to a given key which will persist across requests.  Returns the value.
