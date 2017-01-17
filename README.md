@@ -1,3 +1,5 @@
+![yarnemia Logo](https://raw.github.com/pmoons/yarnemia/master/images/yarnemia.png)
+
 [![CircleCI](https://circleci.com/gh/pmoons/yarnemia.svg?style=svg)](https://circleci.com/gh/pmoons/yarnemia)
 [![codecov](https://codecov.io/gh/pmoons/yarnemia/branch/master/graph/badge.svg)](https://codecov.io/gh/pmoons/yarnemia)
 [![Code Climate](https://codeclimate.com/github/pmoons/yarnemia/badges/gpa.svg)](https://codeclimate.com/github/pmoons/yarnemia)
