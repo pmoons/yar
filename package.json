@@ -16,11 +16,11 @@
     "node": ">=4.0.0"
   },
   "dependencies": {
+    "boom": "4.x.x",
     "hoek": "4.x.x",
     "uuid": "3.x.x"
   },
   "devDependencies": {
-    "boom": "4.x.x",
     "code": "4.x.x",
     "eslint": "^3.13.1",
     "eslint-config-airbnb-base": "^10.0.0",
